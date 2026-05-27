@@ -1,0 +1,66 @@
+\pdfoutput=1
+\documentclass[10pt]{article}
+
+\usepackage[a4paper,margin=0.85in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{pdflscape}
+\usepackage{fancyvrb}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage[numbers,sort&compress]{natbib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  citecolor=blue!55!black,
+  urlcolor=blue!55!black
+}
+
+\newcommand{\figref}[1]{\hyperref[#1]{Figure~\ref*{#1}}}
+
+\graphicspath{{figures/generated/}{figures/}}
+
+\newcommand{\modelcount}{19}
+\DefineVerbatimEnvironment{pseudocode}{Verbatim}{
+  fontsize=\scriptsize,
+  frame=single,
+  framesep=6pt,
+  rulecolor=\color{black!25}
+}
+
+\title{Satellite Embedding: A Review}
+\author{Longhao Wang\textsuperscript{1,2}\\
+\small \textsuperscript{1}Key Laboratory of Water Cycle and Related Land Surface Processes,\\
+\small Institute of Geographic Sciences and Natural Resources Research,\\
+\small Chinese Academy of Sciences, Beijing 100101, China\\
+\small \textsuperscript{2}University of Chinese Academy of Sciences, Beijing 100049, China}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00_abstract}
+\end{abstract}
+
+\input{sections/01_introduction}
+\input{sections/02_concepts_taxonomy}
+\input{sections/03_model_landscape}
+\input{sections/04_applications}
+\input{sections/05_small_area_protocol}
+\input{sections/07_discussion}
+\input{sections/08_conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

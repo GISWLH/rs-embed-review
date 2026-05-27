@@ -1,0 +1,180 @@
+\section{A Compact Wuhan Benchmark for Satellite Embeddings}
+
+The empirical component of this review is intentionally modest in geographic scope but strict in comparison logic. Rather than assembling unrelated benchmark numbers from model papers, we evaluate all \modelcount{} public models on one high-resolution Wuhan ROI covering the East Lake--Tangxun Lake corridor. The region is useful for a first controlled comparison because it contains a compact mixture of open water, dense urban fabric, vegetation, cropland, and mixed transition zones. That mixture is large enough to expose scale and representation differences, but small enough to make repeated extraction, cache checking, and visual inspection feasible. This follows the spirit of benchmark-oriented remote sensing reviews, where a local protocol is not presented as a substitute for global validation, but as a controlled lens for understanding how methods behave under shared data, labels, and evaluation rules \citep{li2020object_detection_isprs,cheng2016object_detection_isprs,reobench}.
+
+All benchmark tasks use the same 500\,m tile grid, the same train/validation/test split, and lightweight heads fitted on frozen embeddings. The protocol deliberately avoids end-to-end fine-tuning because the goal is to compare the information already present in each reusable representation. On-the-fly encoders are run or cached over the same Wuhan window, while precomputed products are sampled at the nearest compatible temporal layer and resampled only as needed for the shared tile grid. This design makes the comparison fairer than reading model-paper leaderboards, but it also keeps the interpretation honest: the results describe local transfer under one urban-lake landscape, not universal model superiority. The benchmark is therefore best read as a diagnostic complement to the literature review. It asks which embeddings preserve class separability, continuous land-cover mixture, water/non-water thresholdability, and dense class structure when the geography, labels, and probe complexity are held fixed.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig02_application_pipeline_gptimage2_20260502.png}
+  \caption{Application-oriented benchmark pipeline. A shared region of interest is converted into a unified embedding extraction workflow, lightweight probe heads, and downstream evaluation targets spanning classification, segmentation, regression, and retrieval.}
+  \label{fig:application-pipeline}
+\end{figure}
+
+the initial 15-tile pilot: it keeps the same region and label semantics, but
+tests whether the observed model differences remain visible across a larger,
+\figref{fig:application-pipeline} summarizes the benchmark pipeline. The executed version uses the current two-by-two Wuhan window, which expands the original visual sanity case to four adjacent Sentinel-2 blocks and 567 valid 500\,m tiles. Labels are derived from ESA WorldCover 2021 and JRC Global Surface Water, then converted into four related evaluation views: dominant land-cover classification, built-up/vegetation/cropland/water fraction regression, binary water extraction, and dense multi-class threshold segmentation. These tasks are deliberately related rather than independent. The same tile that is easy to classify as water may still be difficult near a mixed shoreline; the same embedding that ranks vegetation fraction well may still blur cropland boundaries; and the same product that looks coherent in a map may fail when its native grid is too coarse for 500\,m probing. Using related tasks over one ROI therefore makes the benchmark more diagnostic than a collection of disconnected scores.
+
+\figref{fig:wuhan-2x-embedding-overview} provides the visual acceptance
+case for this expanded benchmark before any downstream probe is fitted. The
+upper-left reference panel shows the original 2x Wuhan window, while the
+remaining panels show the corresponding model-specific embedding maps for the
+\modelcount{} public models. The comparison is intentionally qualitative: it
+checks whether the exported embeddings preserve a recognizable spatial
+organization over the same geographic footprint. Several models recover the
+lake corridor and surrounding urban-vegetation contrast as coherent regions,
+whereas coarser or less spatially matched representations appear flatter,
+blockier, or less locally structured. This figure therefore establishes that
+the downstream classification and regression tasks are being run on a common
+region where the models already expose visibly different spatial behavior.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig10_wuhan_2x_embedding_overview.png}
+  \caption{Original imagery and public-model embedding maps for the two-by-two
+  Wuhan benchmark window. The reference image anchors the shared geographic
+  footprint, and the remaining panels show how the \modelcount{} public
+  embeddings organize the same region before task-specific probes are fitted.}
+  \label{fig:wuhan-2x-embedding-overview}
+\end{figure}
+
+The qualitative overview in \figref{fig:wuhan-2x-embedding-overview} is an important first check before any downstream probe is fitted. The upper-left panel anchors the shared geography, and the remaining panels show how each model organizes the same region in embedding space. Several models recover the lake corridor and surrounding urban-vegetation contrast as coherent structures, while coarser or less spatially matched representations appear flatter, blockier, or less locally organized. This visual step is not a substitute for metrics, but it prevents the benchmark from becoming a detached leaderboard: it confirms that the downstream tasks are comparing embeddings over a common footprint where model families already expose visibly different spatial behavior.
+
+For tile-level land-cover classification, the frozen-embedding linear probe shows a clear leading group (\figref{fig:wuhan-2x-classification-barplot}). GSE obtains the strongest result with 0.890 test macro-F1, 0.971 balanced accuracy, and 0.956 overall accuracy. AnySat and TESSERA form the next tier, with macro-F1 scores of 0.836 and 0.830, respectively. A broader middle group including THOR, TerraMind, Prithvi, TerraFM, WildSat, DOFA, and AgriFM reaches useful overall accuracy, but lower macro-F1 indicates that minority or confusable classes remain harder than the dominant landscape categories. The weakest results come from several RGB- or scale-mismatched checkpoints and the coarse Copernicus product, which confirms that deployment scale and input compatibility are not secondary details for local 500\,m mapping. The spatial prediction maps in \figref{fig:wuhan-2x-classification-maps} add the geographic diagnosis behind the scores. The best models preserve the main water, green, and built-up structure of the corridor, while weaker models show either over-smoothed regions or fragmented transitions. In this respect, classification acts as the broadest representation test: it asks whether a frozen embedding contains enough semantic information for a simple probe to recover the dominant landscape pattern.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig11_wuhan_2x_classification_barplot.png}
+  \caption{Tile-level land-cover classification on the two-by-two Wuhan
+  benchmark window. Bars report public-model test performance from frozen
+  embeddings and a lightweight linear probe over the shared 500\,m tile split.}
+  \label{fig:wuhan-2x-classification-barplot}
+\end{figure}
+
+The spatial prediction maps in
+\figref{fig:wuhan-2x-classification-maps} adds an important diagnostic that a
+single leaderboard cannot provide. The best models preserve the main water,
+green, and built-up structure of the corridor, while weaker models show either
+over-smoothed regions or fragmented class transitions. These maps are useful for
+the survey because they expose whether a model's score reflects coherent
+geographic behavior or only aggregate class counts. In particular, the maps make
+the scale mismatch of coarser products visually apparent, while the leading
+precomputed and multimodal embeddings produce more stable spatial patterns over
+the same tile lattice.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig12_wuhan_2x_classification_maps.png}
+  \caption{Per-model classification maps for the two-by-two Wuhan benchmark
+  window. Each panel uses the same 500\,m tile grid and split-derived probe,
+  allowing spatial errors and over-smoothing to be compared across all
+  \modelcount{} public models.}
+  \label{fig:wuhan-2x-classification-maps}
+\end{figure}
+
+The fraction-regression task evaluates a complementary property: whether the embedding preserves smoothly varying land-cover composition rather than only a dominant class label. Using ridge probes over built-up, vegetation, cropland, and water fractions, GSE again ranks first with a mean test Spearman correlation of 0.881 (\figref{fig:wuhan-2x-fraction-spearman}). TESSERA and THOR follow closely at 0.866 and 0.852, while DOFA, TerraMind, AgriFM, Prithvi, AnySat, and TerraFM remain in a competitive middle band. The strongest models are especially consistent for built-up and vegetation fractions, where several models exceed 0.90 Spearman correlation. Cropland and water are harder in this urban-lake corridor, producing wider differences across models and making the mean score a useful summary of robustness across target variables. \figref{fig:wuhan-2x-fraction-scatter} gives the point-level view behind the ranking. In the strongest panels, the cloud of points follows the one-to-one diagonal for built-up and vegetation fractions, indicating that the probe is not only ordering tiles correctly but also recovering approximate sub-tile proportions. The middle-tier models retain the main monotonic trend but show broader vertical spread, especially for cropland and water. The weakest models show compressed predictions or diffuse point clouds, meaning that their embeddings contain less recoverable information about continuous land-cover mixture in this local setting.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig14_wuhan_2x_fraction_spearman.png}
+  \caption{Fraction-regression performance on the two-by-two Wuhan benchmark
+  window. Bars summarize test Spearman correlation across built-up,
+  vegetation, cropland, and water fraction targets using cached public-model
+  embeddings and ridge regression probes.}
+  \label{fig:wuhan-2x-fraction-spearman}
+\end{figure}
+
+\figref{fig:wuhan-2x-fraction-scatter} gives the point-level view behind
+the regression ranking. In the strongest panels, the cloud of points follows the
+one-to-one diagonal for built-up and vegetation fractions, indicating that the
+probe is not only ordering tiles correctly but also recovering approximate
+sub-tile proportions. GSE, TESSERA, and THOR show the tightest alignment across
+targets, which is consistent with their leading mean Spearman scores. The
+middle-tier models retain the main monotonic trend but show broader vertical
+spread, especially for cropland and water. The weakest models show compressed
+predictions or diffuse point clouds, meaning that their embeddings contain less
+recoverable information about continuous land-cover mixture in this local
+setting. Read together with \figref{fig:wuhan-2x-fraction-spearman}, the
+scatter plot clarifies that high regression performance corresponds to both
+rank consistency and visually calibrated fraction estimates, rather than to a
+single averaged leaderboard value.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig13_wuhan_2x_fraction_scatter.png}
+  \caption{Predicted versus reference fraction-regression scatter plots for all
+  public models on the two-by-two Wuhan benchmark. The panels diagnose whether
+  continuous land-cover proportions are preserved in the frozen embeddings
+  beyond dominant-class classification.}
+  \label{fig:wuhan-2x-fraction-scatter}
+\end{figure}
+
+Water extraction isolates a more operational decision. A tile is treated as water when at least half of its area is covered by the JRC-derived binary water mask, yielding 185 positive tiles out of 567 in the two-by-two Wuhan window. Unlike fraction regression, this task asks whether a frozen embedding can support a threshold-like water/non-water decision with a lightweight linear probe. \figref{fig:wuhan-2x-water-metrics} shows that DOFA is the strongest model on this binary extraction task, reaching 0.895 test IoU and 0.944 F1. THOR, TerraMind, TerraFM, TESSERA, GSE, AnySat, Prithvi, and AgriFM form a strong middle-to-high group, all above 0.75 IoU. The map panels in \figref{fig:wuhan-2x-water-maps} provide the spatial counterpart to the leaderboard: high-performing models recover the continuous lake corridor and suppress most built-up or vegetated non-water tiles, while weaker models either over-predict water along mixed boundaries or miss smaller water-adjacent tiles. This task is useful because it sits between coarse classification and dense segmentation. It is operationally meaningful, yet still compatible with pooled tile embeddings for all public models.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig15_wuhan_2x_water_extraction_metrics.png}
+  \caption{Water extraction performance on the two-by-two Wuhan benchmark
+  window. Bars report test IoU, F1, and accuracy for frozen public-model
+  embeddings with a CUDA-trained linear binary probe over the shared 500\,m
+  tile split.}
+  \label{fig:wuhan-2x-water-metrics}
+\end{figure}
+
+The map panels in \figref{fig:wuhan-2x-water-maps} provide the spatial
+counterpart to the water-extraction leaderboard. High-performing models recover
+the continuous lake corridor and suppress most built-up or vegetated non-water
+tiles, while weaker models either over-predict water along mixed boundaries or
+miss smaller water-adjacent tiles. This visual diagnostic is important because
+binary IoU alone cannot distinguish a coherent shoreline error from scattered
+false positives. Together, the metric and map views show that water extraction
+is a useful intermediate task between coarse tile classification and dense
+segmentation: it is operationally meaningful, but still compatible with pooled
+tile embeddings for all \modelcount{} public models.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig16_wuhan_2x_water_extraction_maps.png}
+  \caption{JRC water truth and public-model water-extraction maps for the
+  two-by-two Wuhan benchmark window. Each model predicts water/non-water labels
+  on the same 500\,m tile grid, making shoreline coherence and false-positive
+  patterns directly comparable across all \modelcount{} public models.}
+  \label{fig:wuhan-2x-water-maps}
+\end{figure}
+
+The final task moves from binary water extraction to dense multi-class segmentation. Here the target is the four-class WorldCover-derived mask used throughout the benchmark: built-up, vegetation, cropland, and water. For each model, class prototypes are estimated from prompted pixels in the dense embedding grid, class-specific thresholds are calibrated on the validation split, and the resulting mask is evaluated on the held-out test split. This is closer to a SAM-style use of embeddings than the preceding probe tasks: the model is not trained end-to-end for segmentation, but its dense representation is queried with class prompts and converted into a mask by thresholding. \figref{fig:wuhan-2x-multiclass-seg-metrics} shows that GSE is the clear leader for this dense multi-class setting, reaching 0.615 test mIoU, 0.700 macro-F1, and 0.833 accuracy. TESSERA ranks second with 0.503 mIoU, followed by AnySat and AgriFM. The class-wise scores reveal an important asymmetry: water is recovered well by the leading models, while cropland remains difficult because it occupies a small and spatially mixed portion of the two-by-two window. \figref{fig:wuhan-2x-multiclass-seg-maps} makes this asymmetry visible. GSE and TESSERA preserve the strongest correspondence to the WorldCover reference, especially for the lake and larger built-up or vegetated zones. AnySat and AgriFM recover the broad water and green structure but lose more detail at class boundaries. Several lower-ranked models collapse toward one or two dominant classes, showing that their dense maps contain less separable class information under this prompt-threshold protocol.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig17_wuhan_2x_multiclass_segmentation_metrics.png}
+  \caption{SAM-like multi-class threshold segmentation on the two-by-two Wuhan
+  benchmark window. Bars report test mIoU, macro-F1, and accuracy for
+  built-up, vegetation, cropland, and water masks derived from dense public
+  embeddings with validation-calibrated class thresholds.}
+  \label{fig:wuhan-2x-multiclass-seg-metrics}
+\end{figure}
+
+The maps in \figref{fig:wuhan-2x-multiclass-seg-maps} make these
+differences visible. GSE and TESSERA preserve the strongest correspondence to
+the WorldCover reference, especially for the lake and larger built-up or
+vegetated zones. AnySat and AgriFM recover the broad water and green structure
+but lose more detail at class boundaries. Several lower-ranked models collapse
+toward one or two dominant classes, showing that their dense maps contain less
+separable class information under this prompt-threshold protocol. Copernicus is
+again a scale-mismatch failure case: its native product grid is too coarse for a
+local dense segmentation benchmark of this size.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig18_wuhan_2x_multiclass_segmentation_maps.png}
+  \caption{WorldCover truth and public-model multi-class threshold
+  segmentation maps for the two-by-two Wuhan benchmark window. Panels use the
+  same four classes---built-up, vegetation, cropland, and water---so class
+  collapse, boundary errors, and scale mismatch can be visually compared across
+  all \modelcount{} public models.}
+  \label{fig:wuhan-2x-multiclass-seg-maps}
+\end{figure}
+
+Across the four tasks, three conclusions are more important than the exact ordering of every model. First, productized and multimodal embeddings are highly competitive in this local setting. GSE is the strongest or near-strongest model in classification, fraction regression, and dense segmentation, while TESSERA, THOR, DOFA, TerraMind, AnySat, and AgriFM recur in the upper or middle tiers depending on the task. Second, the benchmark repeatedly exposes scale mismatch. Coarse products or checkpoints whose input assumptions are poorly aligned with a 500\,m local Sentinel-2 window can fail even when they are useful at their native scale. This does not make those models weak in general; it shows that embedding evaluation must respect the spatial unit at which the representation is produced. Third, no single metric captures all useful behavior. Classification highlights dominant semantic separability, regression highlights continuous mixture structure, water extraction highlights operational thresholdability, and dense segmentation highlights local spatial separability. Read together, the Wuhan benchmark supports the main claim of the review: satellite embeddings should be compared as reusable geospatial representations, not only as model names or pretraining recipes.
+
+\clearpage
